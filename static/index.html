@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPC Klinik Karar Destek Sistemi</title>
+    <!-- Modern Font: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <div class="container glass-panel">
+        <header>
+            <div class="header-content">
+                <div class="icon-container"><i class="fa-solid fa-dna"></i></div>
+                <div>
+                    <h1>OPC Sağkalım Analizi</h1>
+                    <p>Hibrit Topluluk Öğrenme ve XAI Destekli Risk Profilleme</p>
+                </div>
+            </div>
+        </header>
+
+        <main class="dashboard">
+            <!-- Sol Panel: Form -->
+            <section class="patient-form-section">
+                <h2><i class="fa-solid fa-file-medical"></i> Hasta Verileri</h2>
+                <form id="patient-form">
+                    
+                    <div class="form-group row">
+                        <div class="col">
+                            <label for="age">Yaş</label>
+                            <input type="number" id="age" name="age" min="18" max="100" value="55" required>
+                        </div>
+                        <div class="col">
+                            <label for="sex">Cinsiyet</label>
+                            <select id="sex" name="sex">
+                                <option value="Erkek">Erkek</option>
+                                <option value="Kadın">Kadın</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="section-divider">Tümör Bilgileri</div>
+                    
+                    <div class="form-group row">
+                        <div class="col">
+                            <label for="stage">TNM Evresi</label>
+                            <select id="stage" name="stage">
+                                <option value="I">I</option>
+                                <option value="II">II</option>
+                                <option selected value="III">III</option>
+                                <option value="IV">IV</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label for="lymph_n">Lenf Nodu</label>
+                            <select id="lymph_n" name="lymph_n">
+                                <option value="Yok (N0)">Yok (N0)</option>
+                                <option value="Var (N+)">Var (N+)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tumor_size">Tümör Boyutu: <span id="tumor-size-val">3.5</span> cm</label>
+                        <input type="range" id="tumor_size" name="tumor_size" min="0" max="10" step="0.1" value="3.5">
+                    </div>
+
+                    <div class="section-divider">Alışkanlıklar & Biyobelirteçler</div>
+                    
+                    <div class="form-group row">
+                        <div class="col">
+                            <label for="smoking">Sigara</label>
+                            <select id="smoking" name="smoking">
+                                <option value="İçmiyor">İçmiyor</option>
+                                <option value="İçiyor/Geçmişi Var">İçiyor / Geçmişi Var</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label for="alcohol">Alkol</label>
+                            <select id="alcohol" name="alcohol">
+                                <option value="Yok">Yok</option>
+                                <option value="Var">Var</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="hpv_status" name="hpv_status" checked>
+                        <label for="hpv_status">HPV Pozitif (+) (Prognoz için önemli)</label>
+                    </div>
+
+                    <button type="submit" class="btn-primary" id="analyze-btn">
+                        <i class="fa-solid fa-magnifying-glass-chart"></i> Analizi Başlat
+                    </button>
+                    <div id="loading" class="hidden">
+                        <div class="spinner"></div> yapay zeka analiz ediyor...
+                    </div>
+                </form>
+            </section>
+
+            <!-- Sağ Panel: Sonuçlar -->
+            <section class="results-section">
+                <!-- Boş Durum (İlk Açılış) -->
+                <div id="empty-state" class="empty-state visible">
+                    <i class="fa-solid fa-robot"></i>
+                    <h3>Sistem Hazır</h3>
+                    <p>Lütfen sol taraftan hasta verilerini girerek "Analizi Başlat" butonuna tıklayın.</p>
+                </div>
+
+                <!-- Dolu Durum (Analiz Sonrası) -->
+                <div id="results-state" class="results-state hidden">
+                    <div class="result-header">
+                        <h2><i class="fa-solid fa-square-poll-vertical"></i> Analiz Sonucu</h2>
+                        <span id="risk-badge" class="badge badge-success">Düşük Risk Grubu</span>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="risk-meter">
+                        <div class="risk-info">
+                            <span>Tahmini 5 Yıllık Sağkalım Riski</span>
+                            <span id="risk-percentage-text" class="risk-value">%20.0</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div id="risk-progress" class="progress-bar" style="width: 20%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="section-divider mt-4">Model Açıklanabilirliği (SHAP - XAI)</div>
+                    <p class="text-sm p-info">Modelin kararını etkileyen faktörler aşağıda listelenmiştir. Sağa giden kırmızı çubuklar riski artırırken, sola giden mavi çubuklar riski azaltır.</p>
+                    
+                    <div class="chart-container">
+                        <canvas id="shapChart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/js/main.js"></script>
+</body>
+</html>
